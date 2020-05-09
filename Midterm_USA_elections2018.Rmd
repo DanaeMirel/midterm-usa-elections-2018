@@ -1,0 +1,195 @@
+---
+title: "2018 United States midterm elections"
+subtitle: "Results of midterm elections by State"
+#date: "`r Sys.Date()`"
+output:
+  prettydoc::html_pretty:
+    theme: hpstr
+    highlight: github
+#   number_sections: true
+#   fig_width: 7
+#   fig_height: 6
+    fig_caption: true
+---
+
+The data used for this analysis commes from [**The United States Elections Project**](http://www.electproject.org/2018g) which is an information source for the United States electoral system.  The mission of the project is to provide timely and accurate election statistics, electoral laws, research reports, and other useful information regarding the United States electoral system. By providing this information, the project seeks to inform the people of the United States on how their electoral system works, how it may be improved, and how they can participate in it.
+
+# Did voters turn out?
+
+In the United States, midterm elections typically see lower voter turnout than presidential elections. However, with so much buzz surrounding the 2018 midterm elections, turnout was expected to be higher than for previous midterm elections. Was this the case?
+
+```{r, echo=FALSE, message=FALSE}
+
+library('readr')
+library('plotly')
+library('dplyr')
+
+turnout <- read_csv('election_data/TurnoutRates.csv')
+
+# Create a scatterplot of turnout2018 against turnout2014
+p <- turnout %>%
+  plot_ly(x = ~turnout2014, y = ~turnout2018)  %>%
+   add_markers() %>%
+  layout(xaxis = list(title="2014 voter turnout"),
+         yaxis = list(title="2018 voter turnout"))
+
+# Add the line y = x to the scatterplot
+p %>%
+  add_lines(x = c(0.25, 0.6), y = c(0.25, 0.6)) %>%
+  layout(showlegend=FALSE)
+
+```
+
+We can see that higher proportions of eligible voters turned out in nearly every state (those above the orange line)
+
+# Which state had the highest turnout?
+
+```{r, echo=FALSE, message=FALSE}
+
+library('forcats')
+
+# Create a dotplot of voter turnout in 2018 by state ordered by turnout
+turnout %>%
+  top_n(15, wt = turnout2018) %>%
+  plot_ly(x = ~turnout2018, y = ~fct_reorder(state, turnout2018)) %>%
+  add_markers() %>%
+  layout(xaxis = list(title="Eligible voter turnout"),
+         yaxis = list(title="State", type='category'))
+         
+```
+
+Minnesota had a substantially higher turnout than other states. Furhter, we can see clusters emerge, such as Colorado, Oregon, Wisconsin, and Montana.
+
+# How much was spent on Senate races?
+
+Control of the Senate was up for grabs in the 2018 midterm elections, and along with it President Trump's ability to shape the judicial branch of government. Both parties fought hard to control this chamber of Congress, so how did this translate to fundraising?
+
+
+```{r, echo=FALSE, message=FALSE}
+
+fundraising <- read_csv('election_data/fec_candidate_summary_2018.csv')
+
+# Create a histogram of receipts for the senate races
+fundraising %>%
+  filter(office == 'S') %>% #, receipts <= 1000000) %>%
+  plot_ly(x = ~receipts) %>%
+  add_histogram() %>%
+  layout(title = "Fundraising for 2018 Senate races",
+  xaxis = list(title="Total contributions received"))
+
+```
+
+
+The plot above shows the distribution of funds received by Senate candidates during the 2018 election cycle. From the histogram it's clear that fundraising is heavily skewed to the right with some severe outliers above $40 million; however, it's impossible to identify the outlying Senate races from the histogram because data are naturally aggregated into bins. A dotplot is a great follow-up graphic in this type situation.
+
+# Which candidate spent the most?
+
+As you saw, most Senate campaigns raised under \$1M and the vast majority raised under \$20M, so what races raised these astronomical amounts? Histograms bin observations. 
+
+```{r, echo=FALSE, message=FALSE}
+
+# Create a dotplot of the top 15 Senate campaigns
+fundraising %>%
+  filter(office == "S") %>%
+  top_n(15, wt = receipts) %>%
+  plot_ly(x = ~receipts, y = ~fct_reorder(state, receipts),
+          color = ~fct_drop(party),
+          hoverinfo = "text",
+          text = ~paste("Candidate:", name, "<br>",
+                        "Party:", party, "<br>",
+                        "Receipts:", receipts, "<br>",
+                        "Disbursements:", disbursement)) %>%
+  add_markers(colors = c("blue", "red")) %>% 
+  layout(title = "Top 15 candidates with the bigest contributions received by state for 2018 senate races", 
+         xaxis = list(title="contributions received"),
+         yaxis = list(title="State", type='category'))
+
+```
+
+The Senate races in Texas and Florida received the biggest contributions. 
+
+# Mapping change in voter turnout
+
+We already saw that voter turnout increased in nearly every state in the 2018 midterm elections compared to the 2014 midterms.
+
+The map shows the change in voter turnout between these two midterm elections.
+
+
+```{r, echo=FALSE, message=FALSE}
+
+# Create a choropleth map of the change in voter turnout from 2014 to 2018
+
+turnout %>%
+  mutate(change = turnout2018 - turnout2014) %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_trace(z = ~change, locations = ~state.abbr,  text = ~state) %>%
+  colorbar(title = "Turnout change in percentage") %>% 
+  layout(title = "Turnout change bewteewn the 2014 and 2018 midterm election", 
+         geo = list(scope='usa'))
+
+```
+
+Minnesota had the highest voter turnout it didn't have the largest increase in turnout, that honor went to Missouri.
+
+# Mapping Senate winners
+
+There were 33 Senate seats on the ballot in the 2018 midterms (plus two special elections that we'll ignore in this analysis). 
+```{r, echo=FALSE, message=FALSE}
+
+library('scales')  # viridis colors one by one 
+library('viridis')
+
+corr_pal <- viridis_pal(direction = 1)(20)
+
+senate_winners <- read_csv('election_data/senate_winners.csv')
+
+senate_winners <- senate_winners %>% mutate(name = as.factor(name)
+                                            , id = as.factor(id)
+                                            , state = as.factor(state)
+                                            , party = as.factor(party)
+                                            , incumbent = as.factor(incumbent)
+                                            , votes = as.integer(votes))
+
+# Create a choropleth map displaying the Senate results
+senate_winners %>%
+  plot_geo(locationmode = 'USA-states') %>%
+  add_trace(z = ~as.numeric(party), locations = ~state,
+    colors = c("blue", corr_pal[16], "red"),
+    #colors = c(corr_pal[2], corr_pal[12], corr_pal[20]),
+    hoverinfo = "text",
+    text = ~paste("Candidate:", name, "<br>",
+                  "Party:", party, "<br>",
+                  "% vote:", round(pct.vote, 1))
+  ) %>%
+  layout(title = "Senate results for the 2018 midterm elections", geo = list(scope = 'usa')) %>% 
+  hide_colorbar()
+
+```
+
+# A county-level choropleth map
+
+The 2018 Senate race in Florida was extremely contentious, and was not resolved on election night. The race was too close to call, and the recount process was as controversial as the race, with accusations of poorly designed ballots reminiscent of the infamous butterfly ballot in the 2000 presidential election, and a slew of legal challenges.
+
+
+```{r, echo=FALSE, message=FALSE}
+
+fl_boundaries <- read_csv('election_data/fl_boundaries.csv')
+fl_results <- read_csv('election_data/fl_results.csv')
+
+# Join the fl_boundaries and fl_results data frames
+senate_vote <- left_join(fl_boundaries, fl_results, by = c("subregion" = "CountyName"))
+
+# Specify the axis settings to polish the map
+map_axes <- list(title ="", showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE)
+
+# Create a polished county-level choropleth map of Pctvote
+senate_vote %>%
+  group_by(group) %>%
+  plot_ly(x = ~long, y = ~lat, 
+          color = ~Pctvote,
+          split = ~subregion) %>%
+  add_polygons(line = list(width = 0.4), showlegend = FALSE, colors = c("blue", "red")) %>%
+  colorbar(title = "% of votes for Rick Scott") %>% 
+  layout(title = " Votes that the Republican candidate received according to the pre-recount in Florida", xaxis = map_axes, yaxis = map_axes)
+
+```
