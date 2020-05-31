@@ -1,13 +1,13 @@
 # Midterm USA elections 2018 
 
-This Markdown repport has been bouild usign plotly to visualize the results of the midterm USA elections of 2018. 
-The used theme is the `hpstr` Theme (from `prettydoc` Package). 
+This markdown repport has been bouild usign plotly to visualize the results of the midterm USA elections of 2018. 
+The used theme is the `hpstr` theme (from `prettydoc` package). 
 
-![view](markdown2_midtermUSAelections2018.png)
+![view](markdown2_midtermUSAelections2018.png=250x250)
 
 The repport includes choropleth maps to identify the voter turnout by state     
 
-![view](markdown_repp_midtermUSAelections2018.png)
+![view](markdown_repp_midtermUSAelections2018.png =250x250)
 
 The repport is published in the following address:
 
