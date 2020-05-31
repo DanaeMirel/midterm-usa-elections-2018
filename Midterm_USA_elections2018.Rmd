@@ -183,6 +183,8 @@ senate_winners %>%
   layout(title = "Senate results for the 2018 midterm elections", geo = list(scope = 'usa')) %>% 
   hide_colorbar()
 
+
+
 ```
 
 # A county-level choropleth map
