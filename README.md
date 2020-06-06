@@ -3,11 +3,11 @@
 This markdown repport has been bouild usign plotly to visualize the results of the midterm USA elections of 2018. 
 The used theme is the `hpstr` theme (from `prettydoc` package). 
 
-![fig 1.1](markdown_midtermUSAelections2018.png)
+![fig 1.1](markdown_midtermUSAelections2018.png | width=100)
 
 The repport includes choropleth maps to identify the voter turnout by state     
 
-![fig 1.2](markdown_repp_midtermUSAelections2018.png)
+![fig 1.2](markdown_repp_midtermUSAelections2018.png | width=100)
 
 The repport is published in the following address:
 
