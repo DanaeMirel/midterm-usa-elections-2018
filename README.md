@@ -11,6 +11,7 @@ The repport includes choropleth maps to identify the voter turnout by state
 
 The repport is published in the following address:
 
+https://danaemirel.github.io/midterm-usa-elections-2018/
 https://www.rpubs.com/DanaeMartinez/midtermUSAelections
 
 References: 
