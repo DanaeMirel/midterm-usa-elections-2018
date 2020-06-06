@@ -1,5 +1,10 @@
 ---
 title: "2018 United States midterm elections"
+knit: (function(input_file, encoding) {
+  out_dir <- 'docs';
+  rmarkdown::render(input_file,
+  encoding=encoding,
+  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 subtitle: "Results of midterm elections by State"
 author: Danae Martinez
 #date: "`r Sys.Date()`"
